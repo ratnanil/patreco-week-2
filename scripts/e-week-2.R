@@ -7,7 +7,6 @@ library(sf)           # to handle spatial vector data
 library(terra)        # to handle raster data
 library(lubridate)    # to handle dates and times
 library(purrr)        # to apply functions
-library(tmap)
 
 # Import data ####
 
@@ -59,4 +58,19 @@ ggplot(wildschwein_BE, aes(timelag_rounded))+
 
 
 # Taks 2: Deriving movement parameters I: Speed ####
+
+# caluculating steplength 
+
+ wildschwein_BE$steplength <- wildschwein_BE %>% 
+   {(.$E - lead(.$E))^2 + (.$N - lead(.$N))^2} %>% 
+   sqrt()
+
+# or without piping (more repetetive but no {}, see ?magrittr::`%>%`)
+# wildschwein_BE$steplength <- sqrt(
+#   (wildschwein_BE$E - lead(wildschwein_BE$E))^2 + (wildschwein_BE$N - lead(wildschwein_BE$N))^2
+# )
+
+# calculating speed based on timelag (t) in secs and steplength (s) in meter
+
+wildschwein_BE$speed <- wildschwein_BE %>% {.$steplength/.$timelag} 
 
