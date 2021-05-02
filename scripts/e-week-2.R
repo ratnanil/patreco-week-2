@@ -7,7 +7,7 @@ library(sf) # to handle spatial vector data
 library(terra) # to handle raster data
 library(lubridate) # to handle dates and times
 library(purrr) # to apply functions
-library(zoo)  # moving window function
+library(zoo) # moving window function
 
 # DATA IMPORT ####
 
@@ -119,7 +119,7 @@ caro <- read_delim("data/caro60.csv", ",")
 attr(caro$DatetimeUTC, "tzone") # checking timezone
 
 # renaming cols beacause N and E were flipped in source data
-caro %>%  rename(N = E, E = N)
+caro %>% rename(N = E, E = N)
 
 caro <- st_as_sf(caro, coords = c("N", "E"), crs = 2056, remove = F)
 
@@ -140,12 +140,12 @@ n_caro <- c("caro", "caro_3", "caro_6", "caro_9") # define names of list entries
 names(l_caro) <- n_caro # apply names to list
 
 # perform mutation on list using purr::map ####
-l_caro <- l_caro %>% 
-  map(~ mutate(., timelag = as.integer(difftime(lead(DatetimeUTC), DatetimeUTC), units = "secs"))) %>% 
-  map(~ mutate(., steplength = sqrt((.$E - lead(.$E))^2 + (.$N - lead(.$N))^2 ))) %>% 
+l_caro <- l_caro %>%
+  map(~ mutate(., timelag = as.integer(difftime(lead(DatetimeUTC), DatetimeUTC), units = "secs"))) %>%
+  map(~ mutate(., steplength = sqrt((.$E - lead(.$E))^2 + (.$N - lead(.$N))^2))) %>%
   map(~ mutate(., speed = steplength / timelag))
 
-# return tibbles individually to the environemnt #### 
+# return tibbles individually to the environemnt ####
 
 list2env(l_caro, envir = .GlobalEnv) # (if necessary)
 
@@ -155,18 +155,18 @@ list2env(l_caro, envir = .GlobalEnv) # (if necessary)
 
 l_caro_rbind <- l_caro %>% bind_rows(.id = "df")
 
-l_caro_rbind %>% 
-  filter(df == "caro" | df == "caro_3") %>% 
+l_caro_rbind %>%
+  filter(df == "caro" | df == "caro_3") %>%
   ggplot(aes(E, N, colour = df)) +
   geom_path(alpha = 0.5) +
   geom_point(alpha = 0.5) +
-    theme_bw() +
+  theme_bw() +
   theme(panel.border = element_blank()) +
   scale_color_discrete(name = "Trajectories", labels = c("1 Minute", "3 Minutes"))
 
-# 1 minute vs 6 minutes 
-l_caro_rbind %>% 
-  filter(df == "caro" | df == "caro_6") %>% 
+# 1 minute vs 6 minutes
+l_caro_rbind %>%
+  filter(df == "caro" | df == "caro_6") %>%
   ggplot(aes(E, N, colour = df)) +
   geom_path(alpha = 0.5) +
   geom_point(alpha = 0.5) +
@@ -175,8 +175,8 @@ l_caro_rbind %>%
   scale_color_discrete(name = "Trajectories", labels = c("1 Minute", "6 Minutes"))
 
 # 1 minute vs 9 minutes
-l_caro_rbind %>% 
-  filter(df == "caro" | df == "caro_9") %>% 
+l_caro_rbind %>%
+  filter(df == "caro" | df == "caro_9") %>%
   ggplot(aes(E, N, colour = df)) +
   geom_path(alpha = 0.5) +
   geom_point(alpha = 0.5) +
@@ -186,9 +186,9 @@ l_caro_rbind %>%
 
 # plot speed depending on trajectories
 
-labs = c("1 Minute", "3 Minutes", "6 Minutes", "9 Minutes")
+labs <- c("1 Minute", "3 Minutes", "6 Minutes", "9 Minutes")
 
-l_caro_rbind %>% 
+l_caro_rbind %>%
   ggplot(., aes(DatetimeUTC, speed, colour = df)) +
   geom_line() +
   theme_bw() +
@@ -216,9 +216,9 @@ caro$smooth20 <- rollmean(caro$speed, k = 20, fill = NA, allign = "left")
 # plotting rolling windows ####
 
 # pivot longer
-caro_longer <- caro %>% pivot_longer(., cols = starts_with("smooth"), names_to = "window", values_to = "speed_smooth") 
+caro_longer <- caro %>% pivot_longer(., cols = starts_with("smooth"), names_to = "window", values_to = "speed_smooth")
 
-caro_longer %>% 
+caro_longer %>%
   ggplot(., aes(DatetimeUTC, speed_smooth, colour = window)) +
   geom_line() +
   theme_bw() +
