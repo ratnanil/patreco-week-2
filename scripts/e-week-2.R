@@ -8,6 +8,7 @@ library(terra) # to handle raster data
 library(lubridate) # to handle dates and times
 library(purrr) # to apply functions
 library(zoo) # moving window function
+library(tidyr) # tidy data
 
 # DATA IMPORT ####
 
@@ -145,9 +146,9 @@ l_caro <- l_caro %>%
   map(~ mutate(., steplength = sqrt((.$E - lead(.$E))^2 + (.$N - lead(.$N))^2))) %>%
   map(~ mutate(., speed = steplength / timelag))
 
-# return tibbles individually to the environemnt ####
+# return tibbles individually to the enviroment (if necessary) ####
 
-list2env(l_caro, envir = .GlobalEnv) # (if necessary)
+list2env(l_caro, envir = .GlobalEnv)
 
 # plot trajectories ####
 
@@ -206,17 +207,22 @@ rollmean(example, k = 3, fill = NA, align = "left")
 rollmean(example, k = 4, fill = NA, align = "left")
 
 # testing different rolling windows
-caro$smooth03 <- rollmean(caro$speed, k = 3, fill = NA, allign = "left")
-caro$smooth04 <- rollmean(caro$speed, k = 4, fill = NA, allign = "left")
-caro$smooth05 <- rollmean(caro$speed, k = 5, fill = NA, allign = "left")
-caro$smooth10 <- rollmean(caro$speed, k = 10, fill = NA, allign = "left")
-caro$smooth15 <- rollmean(caro$speed, k = 15, fill = NA, allign = "left")
-caro$smooth20 <- rollmean(caro$speed, k = 20, fill = NA, allign = "left")
+
+caro_smooth <- caro %>%
+  mutate(
+    smooth03 = rollmean(speed, k = 3, fill = NA, align = "left"),
+    smooth04 = rollmean(speed, k = 4, fill = NA, align = "left"),
+    smooth05 = rollmean(speed, k = 5, fill = NA, align = "left"),
+    smooth10 = rollmean(speed, k = 10, fill = NA, align = "left"),
+    smooth15 = rollmean(speed, k = 15, fill = NA, align = "left"),
+    smooth20 = rollmean(speed, k = 20, fill = NA, align = "left")
+  )
+
 
 # plotting rolling windows ####
 
 # pivot longer
-caro_longer <- caro %>% pivot_longer(., cols = starts_with("smooth"), names_to = "window", values_to = "speed_smooth")
+caro_longer <- caro_smooth %>% pivot_longer(., cols = starts_with("smooth"), names_to = "window", values_to = "speed_smooth")
 
 caro_longer %>%
   ggplot(., aes(DatetimeUTC, speed_smooth, colour = window)) +
