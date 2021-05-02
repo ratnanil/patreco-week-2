@@ -50,12 +50,42 @@ ggplot(wildschwein_BE, aes(x = DatetimeUTC, y = TierName)) +
   scale_x_datetime(breaks = "1 month") +
   theme_grey()
 
+# counting time lags
+
+# round lags on -2 digits
 wildschwein_BE$timelag_rounded <- round(wildschwein_BE$timelag, -2)
 
-ggplot(wildschwein_BE, aes(timelag_rounded))+
-  geom_histogram(binwidth = 50) +
-  xlim(c(0, 2000))
+# build categories with rounded lags
+wildschwein_BE_lags <- wildschwein_BE %>%
+  st_drop_geometry() %>% 
+  group_by(timelag_rounded) %>%
+  summarise(count = n())
 
+wildschwein_BE_lags
+
+# visualise filtered timelag data
+ggplot(wildschwein_BE, aes(timelag))+
+  geom_histogram() + 
+  scale_y_log10() +
+  ylab("count log10")
+  
+# visualise orignal data with lags < 15000 (as in task graphics)
+wildschwein_BE %>% 
+  filter(timelag < 15000) %>% 
+  ggplot(., aes(timelag))+
+  geom_histogram(binwidth = 100) + 
+  scale_y_log10() +
+  ylab("count log10")
+
+# viualise change in lag over time
+wildschwein_BE %>% 
+  filter(timelag < 30000) %>% 
+  ggplot(., aes(DatetimeUTC, timelag, col = TierID )) +
+  geom_point() +
+  geom_line(size = 0.1)
+
+# consistent lags for 002A with a change in oct 14 and march 15,
+# also consistent for 018A until may 15, quite inconsistent after that
 
 # Taks 2: Deriving movement parameters I: Speed ####
 
@@ -65,7 +95,7 @@ ggplot(wildschwein_BE, aes(timelag_rounded))+
    {(.$E - lead(.$E))^2 + (.$N - lead(.$N))^2} %>% 
    sqrt()
 
-# or without piping (more repetetive but no {}, see ?magrittr::`%>%`)
+# or without piping (more repetition but no {}, see ?magrittr::`%>%`)
 # wildschwein_BE$steplength <- sqrt(
 #   (wildschwein_BE$E - lead(wildschwein_BE$E))^2 + (wildschwein_BE$N - lead(wildschwein_BE$N))^2
 # )
@@ -74,3 +104,4 @@ ggplot(wildschwein_BE, aes(timelag_rounded))+
 
 wildschwein_BE$speed <- wildschwein_BE %>% {.$steplength/.$timelag} 
 
+# Task 3: Cross-scale movement analysis ####
