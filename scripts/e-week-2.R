@@ -118,6 +118,9 @@ caro <- read_delim("data/caro60.csv", ",")
 
 attr(caro$DatetimeUTC, "tzone") # checking timezone
 
+# renaming cols beacause N and E were flipped in source data
+caro %>%  rename(N = E, E = N)
+
 caro <- st_as_sf(caro, coords = c("N", "E"), crs = 2056, remove = F)
 
 # reduce granularity by sequentialising dataset by 3, 6 and 9 ####
@@ -191,5 +194,35 @@ l_caro_rbind %>%
   theme_bw() +
   theme(panel.border = element_blank()) +
   scale_colour_discrete(name = "Intervals", labels = labs) +
+  xlab("Time") +
+  ylab("Speed (m/s)")
+
+# TASK 4: ROLLING WINDOW FUNCTIONS ####
+
+# example with dummy data ####
+example <- rnorm(10)
+
+rollmean(example, k = 3, fill = NA, align = "left")
+rollmean(example, k = 4, fill = NA, align = "left")
+
+# testing different rolling windows
+caro$smooth03 <- rollmean(caro$speed, k = 3, fill = NA, allign = "left")
+caro$smooth04 <- rollmean(caro$speed, k = 4, fill = NA, allign = "left")
+caro$smooth05 <- rollmean(caro$speed, k = 5, fill = NA, allign = "left")
+caro$smooth10 <- rollmean(caro$speed, k = 10, fill = NA, allign = "left")
+caro$smooth15 <- rollmean(caro$speed, k = 15, fill = NA, allign = "left")
+caro$smooth20 <- rollmean(caro$speed, k = 20, fill = NA, allign = "left")
+
+# plotting rolling windows ####
+
+# pivot longer
+caro_longer <- caro %>% pivot_longer(., cols = starts_with("smooth"), names_to = "window", values_to = "speed_smooth") 
+
+caro_longer %>% 
+  ggplot(., aes(DatetimeUTC, speed_smooth, colour = window)) +
+  geom_line() +
+  theme_bw() +
+  theme(panel.border = element_blank()) +
+  scale_colour_discrete(name = "Windows") +
   xlab("Time") +
   ylab("Speed (m/s)")
