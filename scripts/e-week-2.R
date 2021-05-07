@@ -1,3 +1,10 @@
+#' ---
+#' title: "Week 2 of CMA"
+#' author: "My Name"
+#' date: "April 1, 2014"
+#' output: html_document
+#' ---
+
 # LIBRARIES ####
 
 library(readr) # to import tabular data (e.g. csv)
